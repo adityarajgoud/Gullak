@@ -13,11 +13,8 @@ const options = {
       description:
         "Production ready backend engine supporting secure multi-user transaction management.",
     },
+    // REMOVED LOCALHOST: Dropped the local server array item so the dropdown locks perfectly to production
     servers: [
-      {
-        url: "http://localhost:5000",
-        description: "Local Development Server",
-      },
       {
         url: "https://gullak-beta.vercel.app",
         description: "Production Deployed URL (Vercel)",
@@ -34,7 +31,7 @@ const options = {
     },
     security: [{ BearerAuth: [] }],
   },
-  // FIXED: Leverages absolute path resolution so the JSDoc comments are read inside the Vercel workspace environment
+  // Leverages absolute path resolution so the JSDoc comments are read inside the Vercel workspace environment
   apis: [path.join(__dirname, "swaggerDocs.js")],
 };
 

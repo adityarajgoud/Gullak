@@ -11,8 +11,11 @@ const connectDB = async () => {
   }
 
   try {
+    // Advanced connection configurations optimized for cold starts on serverless platforms
     const conn = await mongoose.connect(process.env.MONGO_URI, {
-      serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds instead of hanging
+      serverSelectionTimeoutMS: 8000, // Wait up to 8 seconds for Atlas to respond before timing out
+      maxPoolSize: 10, // Maintain a slim, efficient pool of connections per container
+      connectTimeoutMS: 10000, // Give the initial socket connection 10 seconds to open
     });
 
     // Update the state flag using Mongoose's internal state tracker (1 means connected)

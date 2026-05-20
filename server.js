@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
+const mongoose = require("mongoose"); // Imported to manage global configuration flags
 const morgan = require("morgan"); // HTTP request logger middleware
 const rateLimit = require("express-rate-limit"); // Basic rate-limiting middleware
 const connectDB = require("./config/db");
@@ -9,6 +10,10 @@ const { errorHandler } = require("./middleware/errorMiddleware");
 
 // Load environment variables
 dotenv.config();
+
+// CRITICAL FOR SERVERLESS: Stops Mongoose from buffering queries before the connection is active.
+// This completely prevents the intermittent 500 / buffering timeout errors on cold starts.
+mongoose.set("bufferCommands", false);
 
 const app = express();
 
