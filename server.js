@@ -16,6 +16,10 @@ mongoose.set("bufferCommands", false);
 
 const app = express();
 
+// CRITICAL FOR VERCEL DEPLOYMENT: Tell Express to trust Vercel's proxy headers.
+// This resolves the ERR_ERL_UNEXPECTED_X_FORWARDED_FOR validation crash!
+app.set("trust proxy", 1);
+
 // 1. Request / Response Logging (Good to Have Requirement)
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev")); // Concise, color-coded dev logs in terminal
