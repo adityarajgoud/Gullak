@@ -1,32 +1,45 @@
 const mongoose = require("mongoose");
 
-// Track the database connection status globally across serverless function invocations
-let isConnected = false;
-
 const connectDB = async () => {
-  // If already connected, reuse the existing connection instead of opening a new one
-  if (isConnected) {
-    console.log("Using existing database connection pool.");
+  // Check internal readyState: 1 = Connected, 2 = Connecting
+  if (mongoose.connection.readyState === 1) {
+    console.log("Using existing active database connection.");
+    return;
+  }
+
+  // If a connection initialization is already in progress, await it instead of starting a new pool loop
+  if (mongoose.connection.readyState === 2) {
+    console.log(
+      "Database connection initialization in progress. Awaiting socket opening...",
+    );
+    await new Promise((resolve) => {
+      const checkState = setInterval(() => {
+        if (mongoose.connection.readyState === 1) {
+          clearInterval(checkState);
+          resolve();
+        }
+      }, 50);
+    });
     return;
   }
 
   try {
-    // Advanced connection configurations optimized for cold starts on serverless platforms
-    const conn = await mongoose.connect(process.env.MONGO_URI, {
-      serverSelectionTimeoutMS: 8000, // Wait up to 8 seconds for Atlas to respond before timing out
-      maxPoolSize: 10, // Maintain a slim, efficient pool of connections per container
-      connectTimeoutMS: 10000, // Give the initial socket connection 10 seconds to open
+    console.log("Initializing a fresh MongoDB connection pool...");
+
+    // Configure optimized connection limits for serverless runtimes
+    await mongoose.connect(process.env.MONGO_URI, {
+      serverSelectionTimeoutMS: 5000, // Drop out after 5 seconds if cluster is unreachable
+      maxPoolSize: 5, // Keep connection overhead low per serverless container lambda
+      connectTimeoutMS: 10000, // Give the network handshake 10 full seconds to open sockets
     });
 
-    // Update the state flag using Mongoose's internal state tracker (1 means connected)
-    isConnected = conn.connections[0].readyState === 1;
-
-    console.log(`MongoDB Connected Successfully: ${conn.connection.host}`);
+    console.log(
+      `MongoDB Socket Opened Successfully to Host: ${mongoose.connection.host}`,
+    );
   } catch (error) {
     console.error(`Database connection error: ${error.message}`);
 
-    // CRITICAL FOR VERCEL: Do NOT use process.exit(1) in a serverless environment.
-    // Throwing the error lets Vercel gracefully handle the function fail-retry loop.
+    // CRITICAL FOR VERCEL: Throw instead of process.exit(1) so the platform can handle failures gracefully
     throw error;
   }
 };

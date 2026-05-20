@@ -45,18 +45,30 @@ app.use(cors());
 app.use(express.json());
 
 // CRITICAL SERVERLESS GUARD: Intercepts requests and ensures database connectivity
-// is fully ready before routing traffic to endpoints
+// is fully open and authorized before letting traffic hit your controllers
 app.use(async (req, res, next) => {
-  if (mongoose.connection.readyState !== 1) {
-    console.log("Database not ready yet. Awaiting active connection socket...");
-    try {
-      await connectDB(); // Forces the current execution thread to wait for the handshake
-      next();
-    } catch (err) {
-      next(err); // Pass connection errors cleanly down to the centralized errorHandler
+  try {
+    // Force the execution context to run through the synchronization check
+    await connectDB();
+
+    // Double check state. If a cold start delays the socket, poll until ready
+    let checks = 0;
+    while (mongoose.connection.readyState !== 1 && checks < 20) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      checks++;
     }
-  } else {
+
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({
+        status: "error",
+        message:
+          "Database connection establishing. Please try your request again in a moment.",
+      });
+    }
+
     next();
+  } catch (err) {
+    next(err); // Pass connection errors cleanly down to the centralized errorHandler
   }
 });
 
