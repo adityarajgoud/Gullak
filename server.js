@@ -12,7 +12,6 @@ const { errorHandler } = require("./middleware/errorMiddleware");
 dotenv.config();
 
 // CRITICAL FOR SERVERLESS: Stops Mongoose from buffering queries before the connection is active.
-// This completely prevents the intermittent 500 / buffering timeout errors on cold starts.
 mongoose.set("bufferCommands", false);
 
 const app = express();
@@ -40,6 +39,22 @@ const authLimiter = rateLimit({
 // Standard Global Middlewares
 app.use(cors());
 app.use(express.json());
+
+// CRITICAL SERVERLESS GUARD: Intercepts requests and ensures database connectivity
+// is fully ready before routing traffic to endpoints
+app.use(async (req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    console.log("Database not ready yet. Awaiting active connection socket...");
+    try {
+      await connectDB(); // Forces the current execution thread to wait for the handshake
+      next();
+    } catch (err) {
+      next(err); // Pass connection errors cleanly down to the centralized errorHandler
+    }
+  } else {
+    next();
+  }
+});
 
 // Apply rate limiting exclusively to security-critical Auth routes
 app.use("/api/v1/auth", authLimiter);
