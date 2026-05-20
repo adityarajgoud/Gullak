@@ -39,14 +39,16 @@ app.use(express.json());
 // Apply rate limiting exclusively to security-critical Auth routes
 app.use("/api/v1/auth", authLimiter);
 
-// Swagger Documentation Route (Configured with custom CDNs for robust serverless delivery)
-const CSS_URL =
-  "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui.min.css";
-app.use(
-  "/docs",
-  swaggerUi.serve,
-  swaggerUi.setup(swaggerSpec, { customCssUrl: CSS_URL }),
-);
+// Swagger Documentation Route (Force asset delivery via public CDNs for Serverless Vercel)
+const CDN_URLS = {
+  customCssUrl: "https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui.css",
+  customJs: [
+    "https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-bundle.js",
+    "https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-standalone-preset.js",
+  ],
+};
+
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, CDN_URLS));
 
 // Base Route
 app.get("/", (req, res) => {
