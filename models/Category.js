@@ -1,0 +1,14 @@
+const mongoose = require("mongoose");
+
+const categorySchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true, trim: true },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  },
+  { timestamps: true },
+);
+
+// Prevent a user from creating duplicate categories (case-insensitive handling via controllers)
+categorySchema.index({ name: 1, user: 1 }, { unique: true });
+
+module.exports = mongoose.model("Category", categorySchema);
