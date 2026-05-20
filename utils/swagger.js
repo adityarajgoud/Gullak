@@ -10,10 +10,13 @@ const options = {
         "Production ready backend engine supporting secure multi-user transaction management.",
     },
     servers: [
-      { url: "http://localhost:5000", description: "Local Development Server" },
       {
-        url: "https://your-deployed-app.railway.app",
-        description: "Production Deployed URL",
+        url: "http://localhost:5000",
+        description: "Local Development Server",
+      },
+      {
+        url: "https://gullak-beta.vercel.app",
+        description: "Production Deployed URL (Vercel)",
       },
     ],
     components: {
@@ -27,7 +30,7 @@ const options = {
     },
     security: [{ BearerAuth: [] }],
   },
-  apis: ["./utils/swaggerDocs.js"], // Grouping documentation syntax separately to keep code clean!
+  apis: ["./utils/swaggerDocs.js"], // Points to your schema configurations file
 };
 
 const swaggerSpec = swaggerJSDoc(options);

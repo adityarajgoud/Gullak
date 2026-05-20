@@ -39,8 +39,14 @@ app.use(express.json());
 // Apply rate limiting exclusively to security-critical Auth routes
 app.use("/api/v1/auth", authLimiter);
 
-// Swagger Documentation Route
-app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+// Swagger Documentation Route (Configured with custom CDNs for robust serverless delivery)
+const CSS_URL =
+  "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui.min.css";
+app.use(
+  "/docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, { customCssUrl: CSS_URL }),
+);
 
 // Base Route
 app.get("/", (req, res) => {
