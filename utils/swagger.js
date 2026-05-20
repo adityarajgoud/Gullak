@@ -1,4 +1,8 @@
 const swaggerJSDoc = require("swagger-jsdoc");
+const path = require("path"); // Core Node.js utility for absolute path mapping
+
+// CRITICAL FOR VERCEL: Force the serverless builder to actively include the docs file in the bundle
+require("./swaggerDocs");
 
 const options = {
   definition: {
@@ -30,7 +34,8 @@ const options = {
     },
     security: [{ BearerAuth: [] }],
   },
-  apis: ["./utils/swaggerDocs.js"], // Points to your schema configurations file
+  // FIXED: Leverages absolute path resolution so the JSDoc comments are read inside the Vercel workspace environment
+  apis: [path.join(__dirname, "swaggerDocs.js")],
 };
 
 const swaggerSpec = swaggerJSDoc(options);

@@ -293,3 +293,4 @@
  *     responses:
  *       200: { description: Matrix breakdown of relative monthly cash in/out charts }
  */
+module.exports = {};
